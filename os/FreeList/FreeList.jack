@@ -1,0 +1,129 @@
+class FreeList {
+    field int head;
+    static int heapBase;
+    static int heapEnd;
+
+    constructor FreeList new() {
+        var int initialSize, i;
+
+        let heapBase = 2500; // actual: 2048
+        let heapEnd = 16383;
+
+        let head = heapBase; // offset for other mem in heap for class
+        let head[0] = heapEnd - head;
+        let head[1] = null;
+
+        do Output.printString("FreeList created with ");
+        do Output.printInt(head[0]);
+        do Output.printString(" available memory locations");
+        do Output.println();
+        do Output.printString("FreeList start and end addresses: ");
+        do Output.printInt(head); 
+        do Output.printString(", ");
+        do Output.printInt(head[0]); 
+        do Output.println();
+
+        return this;
+    }
+
+    method int alloc(int size) {
+        var FreeNode prevNode;
+        var int block, curNode, foundNode, newNode;
+
+        let curNode = head;
+        let prevNode = head;
+
+        // Perform a first-fit search to obtain a segment with 
+        //      segment.length > size
+
+        while (~(curNode[1] = null) & ~(curNode[0] > size)) {
+            let prevNode = curNode;
+            let curNode = curNode[1];
+        }
+
+        // If no seg is found, return failure
+        // if (curNode = null) {
+        //     do Output.printString("No suitable free memory available.");
+        //     return 0;
+        // }
+
+        // Found node
+        let foundNode = curNode;
+
+
+        if (size + 4 > foundNode[0]) {
+            // Return whole segment and remove node from list
+            if (head = foundNode) {
+                let head = foundNode[1];
+            } else {
+                // prevNode.next = foundNode.next
+                let prevNode[1] = foundNode[1];
+            }
+
+            // Set up the block (the needed part of the found segment)
+            // Don't adjust size
+            let block = foundNode;
+
+        } else {
+            // move data of found node to start at base + (size + 1)
+            let newNode = foundNode + size + 1;
+            // let newNode[0] = (foundNode[0] - (foundNode[0] - 1));
+            let newNode[0] = foundNode[0] - (size + 1);
+            if (head = foundNode) {
+                let head = newNode;
+            } else {
+                // prevNode.next = newNode
+                let prevNode[1] = newNode;
+            }
+
+            // Set up the block (the needed part of the found segment)
+            let block = foundNode;
+
+            // Remember block size for de-allocation
+            let block[0] = size + 1;
+        }
+
+        do Output.printString("Alloc - block loc: ");
+        do Output.printInt(block + 1);
+        do Output.println();
+        do Output.printString("Alloc - block len: ");
+        do Output.printInt(block[0]);
+        do Output.println();
+
+        do Output.printString("Alloc - head: ");
+        do Output.printInt(head);
+        do Output.println();
+        do Output.println();
+
+        // need to return base + 1 because first address is length
+        return block + 1;
+    }
+    
+    method void deAlloc(int object) {
+        var int segment, length;
+        let segment = object - 1;
+        let length = segment[0];
+
+        do Output.printString("Dealloc: seg loc ");
+        do Output.printInt(segment);
+        do Output.println();
+
+        do Output.printString("Dealloc: seg len ");
+        do Output.printInt(length);
+        do Output.println();
+
+        // Insert segment into FreeList
+        // Check the front of the list for available memory
+        if ((head - length > heapBase) | (head - length = heapBase)) {
+            let segment[1] = head;
+            let head = segment;
+        }
+
+        do Output.printString("Dealloc: new head: ");
+        do Output.printInt(head);
+        do Output.println();
+        do Output.println();
+
+        return;
+    }
+}

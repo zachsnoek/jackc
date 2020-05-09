@@ -1,0 +1,20 @@
+class Main {
+    function void main() {
+        var FreeList freeList;
+        var int mem1, mem2;
+
+        let freeList = FreeList.new();
+        do Output.printString("Created new FreeList.");
+        do Output.println();
+        do Output.println();
+
+        let mem1 = freeList.alloc(10);
+        let mem2 = freeList.alloc(5);
+
+        do freeList.deAlloc(mem2);
+        let mem2 = freeList.alloc(3);
+
+        do freeList.deAlloc(mem1);
+        return;
+    }
+}

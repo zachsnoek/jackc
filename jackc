@@ -1,0 +1,28 @@
+#!/bin/bash
+
+if [ "$#" -ne 1 ]; then
+    printf "Usage: jackc <file | directory>\n\n"
+    exit 1
+fi
+
+ARG=$1
+
+if [[ -f $ARG ]]; then
+    printf "\nJACK: [LOG]\tAttempting to compile $ARG\n"
+    sml @SMLload=src/calccomp $ARG
+elif [[ -d $ARG ]]; then
+    for file in $ARG/*.jack; do         # for each class file (i.e., *.jack file)
+        FNAME=${file##*/}               # strip the directory prefix
+        cp $file tmp/$FNAME             # copy each file so that Jack compiler understands the class name
+        cd tmp
+        printf "\nJACK: [LOG]\tAttempting to compile $file\n"
+        sml @SMLload=../src/calccomp $FNAME    
+        rm ./$FNAME                     # remove the copied class file
+        mv ${FNAME%.*}.vm ../$ARG       # move the generated VM file back to the original directory
+        cd ..
+    done
+else
+    printf "$ARG is not a valid file or directory.\n"
+    printf "Usage: jackc <file | directory>\n\n"
+    exit 1
+fi

@@ -1,0 +1,36 @@
+class Memory {
+    static int free;
+
+    function void init() {
+        let free = 2048;
+        return;
+    }
+
+    function int peek(int loc) {
+        var Array mem;
+        let mem = 0;
+
+        return mem[loc];
+    }
+
+    function void poke(int loc, int val) {
+        var Array mem;
+        let mem = 0;
+        let mem[loc] = val;
+
+        return;
+    }
+
+    function int alloc(int size) {
+        var int pointer;
+
+        let pointer = free;
+        let free = free + size;
+
+        return pointer;
+    }
+
+    function void deAlloc(int obj) {
+        return;
+    }
+}

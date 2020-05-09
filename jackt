@@ -1,0 +1,48 @@
+#!/bin/bash
+
+CMP=tests/cmp
+OUT=tests.out
+COUNT=0
+RED="\033[0;31m"
+GRN="\033[0;32m"
+NC="\033[0m"
+
+if [[ -f $OUT ]]; then
+    rm $OUT
+else
+    touch $OUT
+fi
+
+# Loop through each test directory in tests
+for TEST_DIR in tests/*; do
+    if [ $TEST_DIR != "$CMP" ]; then    # Make sure we don't compile tests/cmp!
+        DIR=${TEST_DIR##*/}             # Strip the directory prefix
+        printf "JACK: [TEST]\tCompiling $TEST_DIR\n" >> $OUT
+        
+        ./jackc $TEST_DIR > /dev/null   # Throw away compiler output and hope all goes well
+
+        printf "JACK: [TEST]\tRunning diff on .vm files\n" >> $OUT
+
+        # Loop through each compiled VM file in the test directory
+        for VM_FILENAME in $TEST_DIR/*.vm; do
+            VM=${VM_FILENAME##*/}       # Strip the directory prefix
+            COUNT=$((COUNT + 1))        # Count the number of VM files
+
+            # Run diff on the VM file and the compare VM file
+            CMP_VM=$CMP/$DIR/$VM
+
+            if [[ $(diff $VM_FILENAME $CMP_VM) ]]; then
+                printf "JACK: [TEST]\tFAILURE on $VM_FILENAME and $CMP_VM\n" >> $OUT
+            else
+                printf "JACK: [TEST]\tSUCCESS on $VM_FILENAME and $CMP_VM\n" >> $OUT
+            fi
+        done
+
+        printf "\n" >> $OUT
+    fi
+done
+
+N_SUC=$(grep SUCCESS $OUT -c)
+N_FAIL=$(grep FAILURE $OUT -c)
+printf "JACK: [TEST]\t Tests completed with ${GRN}$N_SUC success(es)${NC} [$COUNT expected] and ${RED}$N_FAIL failure(s)${NC}\n"
+printf "JACK: [TEST]\t Test log written to $OUT\n"

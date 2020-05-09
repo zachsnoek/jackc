@@ -1,0 +1,80 @@
+class Math {
+
+    function void init() {
+        return;
+    }
+
+    function int abs(int x) {
+        if (x < 0) {
+            return 0 - x;
+        }
+
+        return x;
+    }
+
+    function int multiply(int x, int y) {
+        var int prod;
+
+        while (y > 0) {
+            let prod = prod + x;
+            let y = y - 1;
+        }
+
+        return prod;
+    }
+
+    function int divide(int x, int y) {
+        var int quot;
+        let quot = 0;
+
+        while (x - y > -1) {
+            let x = x - y;
+            let quot = quot + 1;
+        }
+
+        return quot;
+    }
+
+    function int min(int x, int y) {
+        if (y < x) {
+            return y;
+        }
+        return x;
+    }
+
+    function int max(int x, int y) {
+        if (y > x) {
+            return y;
+        }
+        return x;
+    }
+
+    // Algorithm based off of: https://stackoverflow.com/questions/3766020/binary-search-to-compute-square-root-java
+
+    function int sqrt(int x) {
+        var int low, mid, high;
+
+        let low = 0;
+        let high = x + 1;
+
+        while (high - low > 1) {
+            let mid = (low + high) / 2;
+
+            if (Math.power(mid, mid) < x) {
+                let low = mid;
+            } else {
+                if (Math.power(mid, mid) = x) {
+                    let low = mid;
+                } else {
+                    let high = mid;
+                }
+            }
+        }
+
+        return low;
+    }
+
+    function int power(int n, int e) {
+        return n * e;
+    }
+}

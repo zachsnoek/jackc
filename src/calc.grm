@@ -1,0 +1,222 @@
+(* calc.grm - parser spec *)
+
+open calcAS;
+open Bindings;
+
+%%
+%name calc (* calc becomes a prefix in functions *)
+%verbose
+%eop EOF
+%pos int
+%nodefault
+%pure (* no side-effects in actions *)
+
+%term EOF
+    | Class | Constructor | Function 
+    | Method | Field | Static | Var
+    | Int | Char | Boolean | Void | True
+    | False | Null | This | Let | Do
+    | If | Else | While | Ret
+
+    | LCurly | RCurly | LParen | RParen | LSquare | RSquare | FullStop
+    | Comma | SemiCol | Plus | Minus | Times | Div | Amper
+    | Pipe | LThan | GThan | Equals | Tilde
+    | IntConstant of int
+    | StrConstant of string
+    | ID of string
+
+%nonterm
+    ClassDec of AST
+|   ClassVarDec of AST list
+|   ClassVarDecList of AST
+|   ClassVarType of string
+|   ClassVar of AST
+|   Type of string
+|   ClassVarList of AST list
+|   SubroutineDec of AST list
+|   SubType of string
+|   SubReturnType of string
+|   ParamDec of AST
+|   ParamList of AST list
+|   SubBody of AST
+|   SubVarDec of AST list
+|   SubVarDecList of AST
+|   SubVarList of AST list
+
+| Statements of AST
+| Statement of AST list
+| StatementType of AST
+| LetStatement of AST
+| LetIndexStatement of AST
+| IfStatement of AST
+| IfElseStatement of AST
+| WhileStatement of AST
+| DoStatement of AST
+| Expression of AST
+| Term of AST
+| KeywordConstant of string
+
+| BinaryOp of AST
+| UnaryOp of string
+
+| VarName of string
+| ReturnStatement of AST
+
+| SubroutineCall of AST
+| ExpressionList of AST list
+
+%%
+
+ClassDec:
+    Class ID LCurly ClassVarDec SubroutineDec RCurly      (class(ID, classVarDec(ClassVarDec), subroutineDec(SubroutineDec)))
+
+ClassVarDec:
+    ClassVarDecList             ([ClassVarDecList])
+|   ClassVarDecList ClassVarDec (ClassVarDecList::ClassVarDec)
+|   ([])
+
+ClassVarDecList:
+    ClassVarType Type ID SemiCol                    (classVarList(ClassVarType, Type, [classVar(ID)]))
+|   ClassVarType Type ID Comma ClassVarList SemiCol (classVarList(
+                                                        ClassVarType, Type, classVar(ID)::ClassVarList
+                                                    ))
+
+ClassVarList:
+    ID                      ([classVar(ID)])
+|   ID Comma ClassVarList   (classVar(ID)::ClassVarList)
+
+ClassVarType:
+    Static                  ("static")
+|   Field                   ("field")
+
+Type:
+    Int                     ("int")
+|   Char                    ("char")
+|   Boolean                 ("boolean")
+|   ID                      (ID)
+
+SubroutineDec:
+    SubType SubReturnType ID LParen ParamDec RParen SubBody                 ([subroutine(SubType, SubReturnType, ID, ParamDec, SubBody)])
+|   SubType SubReturnType ID LParen ParamDec RParen SubBody SubroutineDec   (subroutine(SubType, SubReturnType, ID, ParamDec, SubBody)::SubroutineDec)
+|   ([])
+
+SubType:
+    Constructor ("constructor")
+|   Function    ("function")
+|   Method      ("method")
+
+SubReturnType:
+    Void        ("void")
+|   Type        (Type)
+
+ParamDec:
+   ParamList   (paramList(ParamList))
+
+ParamList:
+    Type ID                 ([param(Type, ID)])
+|   Type ID Comma ParamList (param(Type, ID)::ParamList)
+|   ([])
+
+SubBody:
+    LCurly SubVarDec Statements RCurly (subBody(subVarDec(SubVarDec), Statements))
+
+SubVarDec:
+    SubVarDecList                   ([SubVarDecList])
+|   SubVarDecList SubVarDec         (SubVarDecList::SubVarDec)
+|   ([])
+
+SubVarDecList:
+    Var Type ID SemiCol             (subVarDecList(Type, [subVar(ID)]))
+|   Var Type SubVarList SemiCol     (subVarDecList(Type, SubVarList))
+
+SubVarList:
+    ID                              ([subVar(ID)])
+|   ID Comma SubVarList             (subVar(ID)::SubVarList)
+
+Statements:
+    Statement  (statements(Statement))
+
+Statement:
+    StatementType           ([StatementType])
+|   StatementType Statement (StatementType::Statement)
+|   ([])
+
+StatementType:
+    LetStatement    (LetStatement)
+|   LetIndexStatement (LetIndexStatement)
+|   IfStatement     (IfStatement)
+|   IfElseStatement (IfElseStatement)
+|   WhileStatement  (WhileStatement)
+|   DoStatement     (DoStatement)
+|   ReturnStatement (ReturnStatement)
+
+LetStatement:
+    Let ID Equals Expression SemiCol (letStatement(ID, Expression))
+
+LetIndexStatement:
+    Let ID LSquare Expression RSquare Equals Expression SemiCol
+        (letIndexStatement(ID, Expression1, Expression2))
+
+IfStatement:
+    If LParen Expression RParen LCurly Statements RCurly    (ifStatement(Expression, Statements))
+
+IfElseStatement:
+    If LParen Expression RParen LCurly Statements RCurly Else LCurly Statements RCurly
+        (ifElseStatement(Expression, Statements1, Statements2))
+
+WhileStatement:
+    While LParen Expression RParen LCurly Statements RCurly (whileStatement(Expression, Statements))
+
+DoStatement:
+    Do SubroutineCall SemiCol   (doStatement(SubroutineCall))
+
+ReturnStatement:
+    Ret SemiCol             (return)
+|   Ret Expression SemiCol  (returnExpression(Expression))
+
+Expression:
+    Term                        (uExpression(Term))
+|   Expression BinaryOp Term    (expression(BinaryOp, Expression, Term))
+
+Term:
+    IntConstant                 (intConstant(IntConstant))
+|   StrConstant                 (strConstant(StrConstant))
+|   KeywordConstant             (keywordConstant(KeywordConstant))
+|   VarName                     (varName(VarName))
+|   LParen Expression RParen    (precedence(Expression))
+|   SubroutineCall              (SubroutineCall)
+|   UnaryOp Term                (unaryOp(UnaryOp, Term))
+|   ID LSquare Expression RSquare   (varIndex(ID, Expression))
+
+SubroutineCall:
+    ID LParen ExpressionList RParen             (methodCall(ID, expressionList(ExpressionList)))
+|   ID FullStop ID LParen ExpressionList RParen (functionCall(ID1, ID2, expressionList(ExpressionList)))
+
+ExpressionList:
+    Expression                          ([Expression])
+|   Expression Comma ExpressionList     (Expression::ExpressionList)
+|   ([])
+
+KeywordConstant:
+    True    ("true")
+|   False   ("false")
+|   Null    ("null")
+|   This    ("this")
+
+BinaryOp:
+    Plus    (binaryOp("add"))
+|   Minus   (binaryOp("sub"))
+|   Times   (binaryOp("call Math.multiply 2"))
+|   Div     (binaryOp("call Math.divide 2"))
+|   Amper   (binaryOp("and"))
+|   Pipe    (binaryOp("or"))
+|   LThan   (binaryOp("lt"))
+|   GThan   (binaryOp("gt"))
+|   Equals  (binaryOp("eq"))
+
+UnaryOp:
+    Minus   ("neg")
+|   Tilde   ("not")
+
+VarName:
+    ID      (ID)

@@ -1,0 +1,34 @@
+class Sys {
+    function void init() {
+        do Math.init();
+        do Output.init();
+        do Screen.init();
+        do Keyboard.init();
+        do Memory.init();
+        do Main.main();
+    }
+
+    function void halt() {
+        while ((1 = 1)) {}
+        return;
+    }
+
+    function void error(int errorCode) {
+        do Output.printString("ERR ");
+        do Output.printInt(errorCode);
+        do Output.println();
+        return;
+    }
+
+    function void wait(int duration) {
+        var int sec;
+        let sec = 10000; // this method will cause issues if duration is large
+        let duration = duration * sec;
+
+        while (duration > 0) {
+            let duration = duration - 1;
+        }
+
+        return;
+    }
+}
